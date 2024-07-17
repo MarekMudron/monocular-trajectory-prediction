@@ -1,42 +1,47 @@
-# Predikcia trajektórie vozidiel pre asistenčné systémy riadenia 
+# Vehicle trajectory prediction for driver assistance systems
 
-Tento projekt sa zameriava na predikciu trajektórie vozidiel za použitia monokulárneho obrazu datasetu KITTI.
+This project focuses on vehicle trajectory prediction using the monocular image of the KITTI dataset.
 
-## Motivácia
-Táto práca sa okrem samotnej predikcie pohybu vozidiel venuje aj problematike
-tvorby vhodnej reprezentácie okolitého prostredia. Jej cieľom je konať len za použitia monokulárneho záznamu, ktorý oproti použitiu drahých senzorov vyžaduje len jednu kameru.
-Na základe toho navrhujem model pozostávajúci z dvoch častí. Prvá časť
-je zodpovedná za tvorbu vhodnej reprezentácie prostredia a druhá časť spracúva túto reprezentáciu a vytvára predikciu.
+### Prediction 1s → 2s
 
+![](doc/scene_10_20.gif)
 
-
-
-## Funkcie
+### Prediction 2s → 1s
+![](doc/scene_20_10.gif)
 
 
 
-## Inštalácia
+## Motivation
+In addition to vehicle movement prediction, this work also deals with the issue
+creating a suitable representation of the surrounding environment. Its goal is to act only using monocular recording, which, compared to the use of expensive sensors, requires only one camera.
+Based on this, I propose a model consisting of two parts. First part
+it is responsible for creating a suitable representation of the environment, and the second part processes this representation and creates a prediction.
 
-Systém bol vyvíjaný na Ubuntu 18.04 64-bit pomocou Python 3.8.
 
-Pre vytvorenia prostredia conda slúži príkaz 
+
+
+## Setup
+
+The system was developed on Ubuntu 18.04 64-bit using Python 3.8.
+
+To create the conda environment run
 
 `conda create --name <env_name> --file requirements.txt --python=3.8`
 
-Prostredie sa aktivuje príkazom
+Activate the environment by
 
 `conda activate <env_name>`
 
-1. Nainštalovať [ORB_SLAM2](https://github.com/raulmur/ORB_SLAM2)
-2. Na fungovanie ORB_SLAM2 v prostredí Python je potrebné nainštalovať [ORB_SLAM2-PythonBindings](https://github.com/jskinn/ORB_SLAM2-PythonBindings)
+1. Install [ORB_SLAM2](https://github.com/raulmur/ORB_SLAM2)
+2. For ORB_SLAM2 to work in a Python environment, it is needed to install [ORB_SLAM2-PythonBindings](https://github.com/jskinn/ORB_SLAM2-PythonBindings)
 
-Pre beh systému je potrebná grafická karta s výpočtovou platformou CUDA.
+A graphics card with a CUDA computing platform is required to run the system.
 
-### Modely pre predspracovanie
+### Models for preprocessing
 
-Používané vytrénované modely sú dostupné na odkaze https://drive.google.com/drive/folders/1yCVw2ORS1v4qe3tx9Lv5e1eYRI6nP1oQ?usp=sharing.
+The trained models used are available at the link https://drive.google.com/drive/folders/1yCVw2ORS1v4qe3tx9Lv5e1eYRI6nP1oQ?usp=sharing.
 
-Tieto modely je potrebné umiestniť podľa nasledujúceho rozdelenia:
+These models need to be placed following:
 
 mono+stereo_640x192: `depth_estimation/monodepth2/models/`
 
@@ -46,12 +51,12 @@ test.pth: `object_detection_3d/GUPNet/code/checkpoints/`
 
 ### Predikčné modely
 
-Vytrénované predikčné modely sú dostupné na odkaze https://drive.google.com/file/d/1FrGpkrq2iCrAwgR5_tMNF7jD7llFWl2E/view?usp=sharing. Obsah `.zip` súboru je potrebné extrahovať do zložky 
-`prediction/` 
+The trained prediction models are available at the link https://drive.google.com/file/d/1FrGpkrq2iCrAwgR5_tMNF7jD7llFWl2E/view?usp=sharing. The contents of the `.zip` file must be extracted into  
+`prediction/` folder.
 
-## Príprava datasetu
+## Dataset preparation
 
-Systém pracuje s monokulárnym záznamom datasetu KITTI, konkrétne so scénami z časti kiti_raw a kitti_tracking. Pred použitim programu je potrebné zorganizovať súborovú štruktúru datasetu podľa nasledujúcej formy.
+The system works with the monocular recording of the KITTI dataset, specifically with the scenes from the kiti_raw and kitti_tracking parts. Before using the program, it is necessary to organize the file structure of the dataset according to the following form.
 
 ```
 ├── kitti_raw
@@ -93,77 +98,64 @@ Systém pracuje s monokulárnym záznamom datasetu KITTI, konkrétne so scénami
                 └── 0015
 ```
 
-Dáta spracované do formy používanej predikčným modelom sú dostupné na odkaze https://drive.google.com/drive/folders/1Nj-Wa8nCbfe2yfTS3imTGUKzEZJ7v7Yw?usp=sharing.
+The data processed into the form used by the prediction model is available at the link  https://drive.google.com/drive/folders/1Nj-Wa8nCbfe2yfTS3imTGUKzEZJ7v7Yw?usp=sharing.
 
-## Predspracovanie obrazu
+## Image preprocessing
 
-V konfiguračných `config/*.yaml` súboroch treba pred spustením skriptov na spracovanie obrazu nastaviť adresár s datasetom KITTI a cieľový adresár, kam sa majú spracované dáta uložiť.
+In the `config/*.yaml` configuration files, before starting the image processing scripts, the directory with the KITTI dataset and the target directory where the processed data should be saved must be set.
 
-Obraz s pôvodnou veľkosťou sa spracuje pomocou príkazu
+The original size image is processed using the command
 
 `python generate_dataset.py config/kitti_big.yaml`
 
-Zmenšený obraz sa spracuje príkazom
+Downsampled image is processed by the command
 
 `python generate_dataset.py config/kitti_small.yaml`
 
-## Trénovanie predikčných modelov
+## Training of prediction models
 
-Konfigurácie trénovaných predikčných modelov sa nachádzajú v adresári `prediction/config`. `.yaml` súbory určené pre trénovanie na dátach získaných z obrazu pôvodnej veľkosti sa nachádzajú v zložke `big_input`. Pre konfiguráciu trénovania modelov zo zmenšených obrázkov je možné použiť `.yaml` súbory zo zložky `small_input`. V jednotlivých konfiguračných súboroch treba pred samotným trénovaním nastaviť zložku s predspracovanými dátami. 
+The configurations of the trained prediction models are located in the `prediction/config` directory. `.yaml` files intended for training on data obtained from the original size image are located in the `big_input` folder. `.yaml` files from the `small_input` folder can be used to configure training models from reduced images. In the individual configuration files, a folder with pre-processed data must be set before the actual training.
 
 
 
-Pred samotným spustením skriptov je potrebné sa presunúť do zložky `prediction/`. Pre každú konfiguráciu treba vytrénovať časti modelu v tomto poradí
+Before running the scripts itself, it is necessary to move to the `prediction/` folder. For each configuration, the parts of the model must be trained in this order
 
 1. auto-encoder: `python train_autoencoder.py <config>`
 2. memory-controller: `python train_memory_controller.py <config>`
 3. iterative refinement module: `python train_itrefmodule.py <config>`
 
-Pomocou skriptu `train_all.sh` je možné vytrénovať modely pre každú konfiguráciu.
+Using the `train_all.sh` script it is possible to train models for each configuration.
 
-## Testovanie modelu
-Tento systém je oproti špičkovým metódam nedostatočný a dopúšťa sa chyby, ktorá je v priemysle neakceptovateľná. Taktiež, čas spracovania obrazu nedosahuje spoľahlivosť, ktorá by sa približovala výkonu v reálnom čase. 
+## Testing
+This system is inadequate compared to the best methods and makes an error that is unacceptable in the industry. Also, the image processing time does not achieve a reliability that approaches real-time performance. 
 
-Pred samotným spustením skriptov pre testovanie je potrebné sa presunúť do zložky `prediction/`. 
-Modely je možné otestovať pomocou príkazu
+Before actually running the scripts for testing, it is necessary to move to the `prediction/` folder.
+Models can be tested using the command
 
 `python test_configs.py <config>`
 
-Pomocou skriptu `test_all.sh` je možné otestovať modely vytvorené každou z konfiguráciií.
+Using the script `test_all.sh' it is possible to test the models created by each of the configurations.
 
 
-## Vizualizácia
+## Visualization
 
 
-Vizualizáciu premietnutých predikcií do obrazu je možné spustiť pomocou skriptu
+The visualization of the projected predictions into the image can be started using a script
 
 `python run.py <prediction_config> <preprocessing_config> <data_path>`
 
-`<preprocessing_config>` je cesta ku niektorému z konfiguračných súborov v zložke `config`.
-
-`<prediction_config>` je cesta ku niektorému z konfiguračných súborov v zložke `prediction/config`.
-
-`<data_path>` cesta k zložke so súbormi predspracovanej scény
-
-### Predikcia 1s → 2s
-
-![](doc/scene_10_20.gif)
-
-### Predikcia 2s → 1s
-![](doc/scene_20_10.gif)
 
 
+## Reference
 
-## Referencie
+Depth Estimation - [monodepth2](https://github.com/nianticlabs/monodepth2)
 
-Odhad hlbky - [monodepth2](https://github.com/nianticlabs/monodepth2)
+Semantic Segmentation - [detectron2](https://github.com/facebookresearch/detectron2)
 
-Sémantická segmentácia - [detectron2](https://github.com/facebookresearch/detectron2)
+3D Vehicle Detection - [GUPNet](https://github.com/SuperMHP/GUPNet)
 
-3D detekcia vozidiel - [GUPNet](https://github.com/SuperMHP/GUPNet)
+Camera Localization - [ORB_SLAM2](https://github.com/raulmur/ORB_SLAM2)
 
-Lokalizácia kamery - [ORB_SLAM2](https://github.com/raulmur/ORB_SLAM2)
+Python bindings for SLAM -[ORB_SLAM2-PythonBindings](https://github.com/jskinn/ORB_SLAM2-PythonBindings)
 
-Python bindings pre SLAM -[ORB_SLAM2-PythonBindings](https://github.com/jskinn/ORB_SLAM2-PythonBindings)
-
-Predikcia - [MANTRA-CVPR20](https://github.com/Marchetz/MANTRA-CVPR20)
+Trajectory Prediction - [MANTRA-CVPR20](https://github.com/Marchetz/MANTRA-CVPR20)
